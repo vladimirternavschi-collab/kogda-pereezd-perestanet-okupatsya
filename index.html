@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Когда переезд перестанет окупаться. Расчёт по данным статистики</title>
+<meta name="description" content="Через сколько лет уезжать из Молдовы за зарплатой перестанет иметь смысл. Расчёт по трём источникам роста, с калькулятором для своей профессии.">
+<meta property="og:title" content="Когда переезд перестанет окупаться">
+<meta property="og:description" content="Через сколько лет уезжать из Молдовы за зарплатой перестанет иметь смысл. Считаем по трём источникам роста.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#171320; --bg-deep:#100d17; --surface:#221c2e; --surface-2:#2b2439; --line:#3a3149;
+  --ink:#f1edf6; --ink-2:#b0a7bd; --ink-3:#867c95;
+  --hot:#f2704a; --hot-lit:#ff9070;      /* Молдова, «здесь» */
+  --cool:#7c9cff; --cool-lit:#a3b9ff;    /* Европа, «там» */
+  --brass:#dcb45f;                        /* хороший сценарий */
+  --dim:#6f6580;                          /* сценарий производительности */
+  --z-tip:60;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --pad:clamp(1.15rem,5vw,4rem);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:"Golos Text",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:clamp(1rem,.96rem + .2vw,1.09rem);line-height:1.62;
+  font-variant-numeric:tabular-nums;overflow-x:hidden;
+}
+.wrap{max-width:74rem;margin:0 auto;padding:0 var(--pad)}
+h1,h2,h3{line-height:1.04;letter-spacing:-.032em;text-wrap:balance;font-weight:800}
+h1{font-size:clamp(2.35rem,1.2rem + 5.4vw,4.9rem);font-weight:900;letter-spacing:-.04em}
+h2{font-size:clamp(1.72rem,1.1rem + 2.5vw,3.1rem)}
+h3{font-size:clamp(1.12rem,1rem + .6vw,1.42rem);letter-spacing:-.018em}
+p{text-wrap:pretty}
+.lead{font-size:clamp(1.1rem,1rem + .55vw,1.42rem);color:var(--ink-2);line-height:1.5}
+.dimmer{color:var(--ink-3);font-size:.88rem;line-height:1.5}
+b,strong{font-weight:700;color:var(--ink)}
+a{color:var(--cool-lit)}
+
+/* HERO */
+.hero{position:relative;padding:clamp(4.5rem,13vh,9rem) 0 clamp(2.5rem,6vh,4.5rem);overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(68% 88% at 74% 20%,rgba(242,112,74,.16),transparent 66%);pointer-events:none}
+.hero-quote{font-size:clamp(1.05rem,.98rem + .5vw,1.32rem);color:var(--hot-lit);font-weight:500;font-style:italic;max-width:34rem;margin-bottom:1.5rem;line-height:1.45}
+.hero-grid{display:grid;gap:clamp(2rem,4vw,3.5rem);align-items:end}
+@media(min-width:62rem){.hero-grid{grid-template-columns:1.35fr 1fr}}
+.hero h1{margin-bottom:1.35rem;max-width:16ch}
+.hero .lead{max-width:46ch}
+.facts{border-top:2px solid var(--hot);padding-top:1.1rem}
+.facts-h{font-size:.82rem;color:var(--ink-3);margin-bottom:1rem;letter-spacing:.01em}
+.facts-row{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;padding:.72rem 0;border-bottom:1px solid var(--line)}
+.facts-row:last-child{border-bottom:0}
+.facts-when{font-size:.93rem;color:var(--ink-2);line-height:1.3}
+.facts-when s{display:block;text-decoration:none;color:var(--ink-3);font-size:.8rem}
+.facts-val{font-size:clamp(1.5rem,1.2rem + 1.2vw,2.05rem);font-weight:800;letter-spacing:-.03em;white-space:nowrap}
+.facts-val s{text-decoration:none;font-size:.7em;font-weight:600;color:var(--ink-3);margin-left:.15em}
+.v-good{color:var(--brass)} .v-now{color:var(--hot-lit)} .v-bad{color:var(--dim)}
+
+/* SECTIONS */
+section{padding:clamp(3.2rem,9vh,6.5rem) 0;border-top:1px solid var(--line)}
+.sec-head{display:grid;gap:.9rem;margin-bottom:clamp(1.8rem,4vw,3rem)}
+@media(min-width:62rem){.sec-head{grid-template-columns:1.1fr 1fr;gap:2.5rem;align-items:end}}
+.sec-head h2{max-width:18ch}
+.sec-head p{color:var(--ink-2);max-width:52ch}
+.kicker{font-size:.83rem;color:var(--hot);font-weight:600;margin-bottom:.5rem}
+
+figure{margin:0}
+.plot{position:relative}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.grid line{stroke:var(--line);stroke-width:1}
+.axis text{fill:var(--ink-3);font-size:12px}
+.lbl{fill:var(--ink);font-size:13px;font-weight:600}
+.lbl-2{fill:var(--ink-2);font-size:12px}
+.cap{margin-top:1.1rem;color:var(--ink-3);font-size:.85rem;line-height:1.5}
+
+/* BARS */
+.pbars{display:grid;gap:1.15rem;margin-top:.5rem}
+.pbar-lab{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-bottom:.4rem}
+.pbar-name{font-weight:600;font-size:.98rem}
+.pbar-name s{display:block;text-decoration:none;color:var(--ink-3);font-size:.8rem;font-weight:400}
+.pbar-val{font-weight:800;font-size:1.15rem;letter-spacing:-.02em;white-space:nowrap}
+.bar-track{height:12px;background:var(--surface);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;transform-origin:left;animation:grow .9s var(--ease) both}
+@keyframes grow{from{transform:scaleX(0)}}
+@media(prefers-reduced-motion:reduce){.bar-fill{animation:none}}
+
+/* CALLOUTS */
+.verdict{margin-top:2rem;padding:clamp(1.3rem,3vw,2rem);background:var(--surface);border-radius:4px;font-size:clamp(1.05rem,1rem + .4vw,1.28rem);line-height:1.5;color:var(--ink-2);max-width:60ch}
+.verdict b{color:var(--ink)}
+.verdict em{font-style:normal;color:var(--hot-lit);font-weight:700}
+.claim{border-left:0;border-top:2px solid var(--cool);padding-top:1rem;margin-top:2rem;max-width:56ch;color:var(--ink-2)}
+
+/* CALC */
+.calc{background:var(--surface);border-radius:6px;padding:clamp(1.3rem,3.5vw,2.4rem)}
+.calc-grid{display:grid;gap:1.5rem}
+@media(min-width:56rem){.calc-grid{grid-template-columns:1fr 1.05fr;gap:clamp(2rem,4vw,3.5rem)}}
+.field{margin-bottom:1.15rem}
+.field label{display:block;font-size:.86rem;color:var(--ink-2);margin-bottom:.4rem}
+.field input,.field select{
+  width:100%;background:var(--bg-deep);color:var(--ink);border:1px solid var(--line);
+  border-radius:3px;padding:.62rem .8rem;font:inherit;font-size:1rem;font-variant-numeric:tabular-nums;
+}
+.field input:focus,.field select:focus{outline:2px solid var(--hot);outline-offset:1px;border-color:transparent}
+.seg{display:flex;gap:.4rem;flex-wrap:wrap}
+.seg button{
+  flex:1 1 auto;background:var(--bg-deep);color:var(--ink-2);border:1px solid var(--line);
+  border-radius:3px;padding:.55rem .5rem;font:inherit;font-size:.9rem;cursor:pointer;
+  transition:background .25s var(--ease),color .25s var(--ease),border-color .25s var(--ease);
+}
+.seg button:hover{color:var(--ink);border-color:var(--ink-3)}
+.seg button[aria-pressed=true]{background:var(--hot);border-color:var(--hot);color:#1b0f0a;font-weight:600}
+.out-gap{font-size:.86rem;color:var(--ink-2);margin-bottom:1.2rem;padding-bottom:1.1rem;border-bottom:1px solid var(--line)}
+.out-gap b{font-size:1.5rem;letter-spacing:-.03em;color:var(--hot-lit);display:inline-block;vertical-align:-2px}
+.out-row{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;padding:.78rem 0;border-bottom:1px solid var(--line)}
+.out-row:last-of-type{border-bottom:0}
+.out-name{font-size:.93rem;color:var(--ink-2);line-height:1.3;max-width:22ch}
+.out-name s{display:block;text-decoration:none;color:var(--ink-3);font-size:.79rem}
+.out-val{font-size:clamp(1.35rem,1.1rem + 1vw,1.85rem);font-weight:800;letter-spacing:-.03em;white-space:nowrap}
+.out-val s{text-decoration:none;font-size:.55em;font-weight:600;color:var(--ink-3);margin-left:.2em}
+.out-note{margin-top:1.1rem;font-size:.85rem;color:var(--ink-3);line-height:1.5}
+
+/* LIFE LINE */
+.life{margin-top:.5rem}
+.life-note{display:grid;gap:.6rem;margin-top:1.4rem;max-width:58ch}
+.life-note div{display:flex;gap:.7rem;font-size:.93rem;color:var(--ink-2);line-height:1.45}
+.life-note i{flex:0 0 auto;width:.62rem;height:.62rem;border-radius:50%;margin-top:.45rem}
+
+/* TABLE-ISH */
+.rows{margin-top:.5rem}
+.row{display:grid;grid-template-columns:1fr auto auto;gap:.8rem 1.2rem;align-items:baseline;padding:.8rem 0;border-bottom:1px solid var(--line)}
+.row:first-child{border-top:1px solid var(--line)}
+.row-h{color:var(--ink-3);font-size:.8rem;border-bottom:1px solid var(--line);padding-bottom:.5rem}
+.row-name{font-weight:600}
+.row-name s{display:block;text-decoration:none;color:var(--ink-3);font-size:.8rem;font-weight:400}
+.row-a,.row-b{font-weight:700;text-align:right;min-width:5.5rem;font-size:1.05rem}
+.row-a{color:var(--hot-lit)} .row-b{color:var(--cool-lit)}
+
+/* SOURCES */
+.srcs{display:grid;gap:.55rem;margin-top:1rem}
+.srcs div{font-size:.88rem;color:var(--ink-2);padding-left:1rem;border-left:1px solid var(--line)}
+footer{padding:clamp(3rem,8vh,5rem) 0 clamp(4rem,10vh,7rem);border-top:1px solid var(--line);color:var(--ink-3);font-size:.9rem}
+footer p{max-width:60ch;margin-bottom:.8rem}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="hero-quote">«Уезжать всё равно выгоднее» — так говорят, и пока это правда. Вопрос в том, сколько ещё лет она будет правдой.</p>
+      <h1>Когда переезд перестанет окупаться</h1>
+      <p class="lead">Я посчитал, через сколько лет зарплата в Молдове догонит то, что человек той же профессии зарабатывает в Европе. Ответ зависит не от того, насколько быстро мы растём, а от того, чем именно.</p>
+    </div>
+    <div class="facts">
+      <p class="facts-h">Медсестре из Кишинёва догонять сиделку из Турина</p>
+      <div class="facts-row">
+        <div class="facts-when">Если растём как в 2010–2021<s>5% в год</s></div>
+        <div class="facts-val v-good">21<s>год</s></div>
+      </div>
+      <div class="facts-row">
+        <div class="facts-when">Если как последние пять лет<s>2,8% в год</s></div>
+        <div class="facts-val v-now">35<s>лет</s></div>
+      </div>
+      <div class="facts-row">
+        <div class="facts-when">Если только за счёт производительности<s>0,66% в год</s></div>
+        <div class="facts-val v-bad">104<s>года</s></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="ostatok">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="kicker">С чего начинается расчёт</p>
+        <h2>Сравниваем не зарплаты, а то, что остаётся</h2>
+      </div>
+      <p>Платить за жильё приходится и здесь, и там, поэтому голые зарплаты сравнивать бессмысленно. Берём чистый доход, вычитаем жильё и смотрим на свободные деньги. У сиделки с проживанием жильё и питание входят в условия работы, поэтому вычитать нечего.</p>
+    </div>
+    <figure>
+      <div class="pbars" id="bars"></div>
+      <figcaption class="cap">Евро в месяц после вычета жилья. Молдова — для человека со своим жильём, коммунальные 115 евро. Курс НБМ на 4 сентября 2026: 20,04 лея за евро.</figcaption>
+    </figure>
+    <div class="verdict">
+      Чтобы разница исчезла, доход строителя в Молдове должен вырасти <em>в 2,4 раза</em>, а медсестры — <em>в 3 раза</em>. Это ещё не годы, а расстояние: годы появляются, когда мы задаём скорость.
+    </div>
+  </div>
+</section>
+
+<section id="skorosti">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="kicker">Три скорости</p>
+        <h2>Каждая из них уже была в нашей истории</h2>
+      </div>
+      <p>Я не выдумывал темпы роста. Пять процентов — то, как реальные доходы росли одиннадцать лет подряд. Два и восемь — как они растут последние пять лет. Ноль целых шестьдесят шесть сотых — рост производительности труда, то есть единственное, что останется, когда перераспределять станет нечего.</p>
+    </div>
+    <figure>
+      <div class="plot" id="plot-years"></div>
+      <figcaption class="cap">Сколько лет догонять при каждом источнике роста. Зарплаты стран назначения учтены в движении: Италия минус 0,4% в год реально, Германия плюс 0,7%.</figcaption>
+    </figure>
+    <div class="verdict">
+      Между первой и второй колонкой лежат <em>11 и 14 лет</em>. Это не «немного медленнее», а разница между «успею, пока работаю» и «увижу на пенсии, если доживу».
+    </div>
+  </div>
+</section>
+
+<section id="vozrast">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="kicker">То же самое, но в возрасте</p>
+        <h2>Если сегодня вам тридцать</h2>
+      </div>
+      <p>Возраст объясняет больше, чем проценты. Одна и та же цифра означает совершенно разные вещи в сорок семь и в шестьдесят пять, и разница между двумя сценариями измеряется не в пунктах роста, а в том, застанет человек этот момент работающим или нет.</p>
+    </div>
+    <figure class="life">
+      <div class="plot" id="plot-life"></div>
+      <figcaption class="cap">Средняя продолжительность жизни в Молдове: 68,4 года у мужчин, 77,2 у женщин. Национальное бюро статистики, данные за 2025 год.</figcaption>
+    </figure>
+    <div class="life-note">
+      <div><i style="background:var(--brass)"></i><span><b>47 лет.</b> Дети выросли, у кого-то появились внуки. Человек ещё может передумать и остаться, а его внукам уже не придётся выбирать между профессией и страной.</span></div>
+      <div><i style="background:var(--brass)"></i><span><b>51 год.</b> До пенсии больше десяти лет работы. Порог наступает, и им успевают воспользоваться.</span></div>
+      <div><i style="background:var(--hot)"></i><span><b>58 лет.</b> Последние годы перед пенсией и десять лет до той отметки, до которой в среднем доживает молдавский мужчина. Формально догнал, но решение об отъезде в таком возрасте уже не принимают.</span></div>
+      <div><i style="background:var(--hot)"></i><span><b>65 лет.</b> Это уже после пенсии. Женщина в этом возрасте не уезжает за зарплатой: если она и уедет, то к детям, и решение будет семейным, а не денежным.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="calc">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="kicker">Посчитайте себя</p>
+        <h2>Свои цифры вместо моих</h2>
+      </div>
+      <p>Выберите профессию или впишите собственные суммы. Все поля редактируются: средняя по отрасли не описывает никого, и ваш настоящий заработок точнее любой моей оценки.</p>
+    </div>
+
+    <div class="calc calc-grid">
+      <div>
+        <div class="field">
+          <label for="prof">Профессия</label>
+          <select id="prof">
+            <option value="nurse">Медсестра здесь → сиделка в Италии</option>
+            <option value="builder">Строитель здесь → стройка в Италии</option>
+            <option value="dev">Разработчик здесь → разработчик в Германии</option>
+            <option value="custom">Свои цифры</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="salHome">Ваша зарплата в Молдове, брутто, леев в месяц</label>
+          <input id="salHome" type="number" inputmode="numeric" min="0" step="100" value="9442">
+        </div>
+        <div class="field">
+          <label for="salAway">Зарплата там, на руки, евро в месяц</label>
+          <input id="salAway" type="number" inputmode="numeric" min="0" step="10" value="1035">
+        </div>
+        <div class="field">
+          <label for="rentAway">Жильё там, евро в месяц</label>
+          <input id="rentAway" type="number" inputmode="numeric" min="0" step="10" value="0">
+        </div>
+        <div class="field">
+          <label>Жильё здесь</label>
+          <div class="seg" id="segHome">
+            <button type="button" data-v="115" aria-pressed="true">Своё, 115 €</button>
+            <button type="button" data-v="455" aria-pressed="false">Съём, 455 €</button>
+            <button type="button" data-v="0" aria-pressed="false">С родителями</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Куда едем</label>
+          <div class="seg" id="segDrift">
+            <button type="button" data-v="-0.004" aria-pressed="true">Италия, −0,4% в год</button>
+            <button type="button" data-v="0.007" aria-pressed="false">Германия, +0,7% в год</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="out-gap">Ваш разрыв: доход должен вырасти <b id="outGap">в 3,0 раза</b></p>
+        <div class="out-row">
+          <div class="out-name">Если растём как в 2010–2021<s>5% в год</s></div>
+          <div class="out-val v-good" id="outGood">21<s>год</s></div>
+        </div>
+        <div class="out-row">
+          <div class="out-name">Если как последние пять лет<s>2,8% в год</s></div>
+          <div class="out-val v-now" id="outNow">35<s>лет</s></div>
+        </div>
+        <div class="out-row">
+          <div class="out-name">Если только за счёт производительности<s>0,66% в год</s></div>
+          <div class="out-val v-bad" id="outBad">104<s>года</s></div>
+        </div>
+        <p class="out-note" id="outAge"></p>
+        <p class="out-note">Расчёт: из зарплаты там вычитается тамошнее жильё, к остатку прибавляется ваше жильё здесь, сумма переводится в леи и в брутто по молдавским ставкам налога и взносов. Полученное делится на вашу нынешнюю зарплату.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="es">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="kicker">Спасёт ли вступление в ЕС</p>
+        <h2>Членство не ускоряет, а делает возможным</h2>
+      </div>
+      <p>Есть измеримый показатель: средняя зарплата страны в процентах от средней по Евросоюзу. Дорогу от 40% до 60% страны проходили за очень разный срок, а та, что осталась снаружи, не дошла и до сорока.</p>
+    </div>
+    <figure>
+      <div class="plot" id="plot-eu"></div>
+      <figcaption class="cap">Сколько лет заняла дорога от 40% до 60% от среднего уровня зарплат в ЕС. У Сербии максимум за всё время наблюдений — 37,6%, и это результат 2025 года.</figcaption>
+    </figure>
+
+    <div class="sec-head" style="margin-top:clamp(2.5rem,6vw,4rem)">
+      <div><h3 style="max-width:22ch">А что было сразу после вступления</h3></div>
+      <p>Реальная зарплата, среднегодовой темп за пять лет до вступления и за пять лет после. У четверых из шести стало быстрее, у двоих медленнее, но ни одна не ушла в минус.</p>
+    </div>
+    <div class="rows">
+      <div class="row row-h"><div>Страна</div><div class="row-a" style="color:inherit">До</div><div class="row-b" style="color:inherit">После</div></div>
+      <div class="row"><div class="row-name">Болгария<s>вступление 2007</s></div><div class="row-a">3,2%</div><div class="row-b">6,6%</div></div>
+      <div class="row"><div class="row-name">Латвия<s>2004</s></div><div class="row-a">4,9%</div><div class="row-b">7,8%</div></div>
+      <div class="row"><div class="row-name">Хорватия<s>2013</s></div><div class="row-a">−1,4%</div><div class="row-b">0,8%</div></div>
+      <div class="row"><div class="row-name">Польша<s>2004</s></div><div class="row-a">1,0%</div><div class="row-b">1,7%</div></div>
+      <div class="row"><div class="row-name">Литва<s>2004</s></div><div class="row-a">6,8%</div><div class="row-b">4,4%</div></div>
+      <div class="row"><div class="row-name">Румыния<s>2007</s></div><div class="row-a">7,9%</div><div class="row-b">1,4%</div></div>
+    </div>
+    <p class="claim">У всех, кто вступал в 2004 и 2007 годах, пятилетка «после» содержит мировой кризис 2008–2009. Разделить эффект вступления и эффект кризиса на этих данных нельзя. Но они прошли кризис и всё равно дошли до 60% за 7–10 лет, а Сербия за пределами союза не дошла и до 40%.</p>
+  </div>
+</section>
+
+<section id="mehanizm">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="kicker">Самая неприятная часть</p>
+        <h2>Зарплаты росли из прибыли, а не из производства</h2>
+      </div>
+      <p>За 2019–2024 годы экономика Молдовы росла на 0,23% в год, а реальные зарплаты — на 2,8% в год. Разницу оплатила прибыль компаний: её доля в ВВП упала с 45% до 36,5%, а доля зарплат выросла с 41% до 48,4%.</p>
+    </div>
+    <figure>
+      <div class="plot" id="plot-mech"></div>
+      <figcaption class="cap">Среднегодовые темпы по двум периодам. До 2019 года зарплаты шли почти вслед за производительностью, и такой рост держится сам; после 2019 производительность остановилась.</figcaption>
+    </figure>
+    <div class="verdict">
+      Прибыль — это то, из чего берутся инвестиции, инвестиции — то, из чего берётся производительность, а производительность — единственный источник зарплат в долгую. <b>Последние пять лет мы платим себе зарплату из тех денег, из которых должны были расти зарплаты через десять лет.</b>
+    </div>
+    <p class="claim">Пять процентов в год — не мечта, мы так росли одиннадцать лет подряд. Значит вопрос не в том, возможно ли это, а в том, вернём ли мы источник роста или продолжим доедать то, из чего он должен появиться.</p>
+  </div>
+</section>
+
+<section id="metod">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="kicker">Методология</p>
+        <h2>Чего в этом расчёте нет</h2>
+      </div>
+      <p>Две профессии — это не вся экономика. Занятость строителя взята полной, хотя итальянский рабочий получает за фактически отработанные часы и в межсезонье зарабатывает меньше. И расчёт не отвечает на вопрос, уедет ли конкретный человек: люди уезжают не только за деньгами.</p>
+    </div>
+    <div class="srcs">
+      <div><b>Медиана, а не средняя.</b> Средняя по здравоохранению — 18 399 леев, но половина работающих в отрасли получает меньше 15 000: среднюю тянут вверх врачи и администрация. Для строителя взята середина интервала, в котором лежит медиана по обследованию БНС.</div>
+      <div><b>Зарплаты стран назначения не заморожены.</b> Продлены тем темпом, каким шли с начала века: реальная зарплата в Италии за 20 лет упала на 6%, а у нижней десятой части работников примерно на 40%.</div>
+      <div><b>Границы точности механизма.</b> Перенос социальных взносов 2021 года даёт до двух процентных пунктов, которые измерить нельзя, а ревизия ряда национальных счетов сдвигает базу на 2,7 пункта.</div>
+      <div><b>Жильё в расчёте не дорожает.</b> Аренда в Кишинёве росла примерно с той же скоростью, что и зарплаты, но допущение это не бесплатное.</div>
+      <div><b>Это арифметика, а не прогноз.</b> Здесь не утверждается, что доходы будут расти на столько-то. Здесь показано, сколько лет уходит при каждом источнике роста, а источник выбирает страна.</div>
+    </div>
+
+    <div class="sec-head" style="margin-top:clamp(2.5rem,6vw,4rem)">
+      <div><h3>Откуда цифры</h3></div>
+      <p>Все величины прослеживаются до первоисточника. Расчёты воспроизводятся из опубликованных рядов.</p>
+    </div>
+    <div class="srcs">
+      <div>Национальное бюро статистики: зарплаты по видам деятельности, распределение работников по размеру зарплаты, ИПЦ, национальные счета, продолжительность жизни, перепись 2024</div>
+      <div>Постановление Правительства № 837/2016 — оклады в учреждениях системы обязательного медицинского страхования</div>
+      <div>Eurostat, AMECO, OECD — реальная компенсация на занятого по Италии, Германии, странам ЦВЕ</div>
+      <div>Отраслевой договор Италии по домашнему труду; тарифы Cassa Edile — ставки в строительстве</div>
+      <div>Национальный банк Молдовы — официальный курс</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Расчёт сделан в сентябре 2026 года. Через год я вернусь к нему и покажу, попал или ошибся.</p>
+    <p>Мария, Алина и Ана — имена собирательные. Всё остальное посчитано по документам.</p>
+  </div>
+</footer>
+
+<script>
+const RATE=20.0380, TAX_K=0.8008, TAX_C=297;
+const RATES=[{k:'bad',r:0.0066},{k:'now',r:0.028},{k:'good',r:0.05}];
+const PRESETS={
+  nurse :{home:9442, away:1035, rentAway:0,   drift:-0.004},
+  builder:{home:12500,away:1421, rentAway:315, drift:-0.004},
+  dev   :{home:22500,away:2123, rentAway:650, drift:0.007}
+};
+const nf=n=>n.toLocaleString('ru-RU');
+const plural=(n,a,b,c)=>{const m=n%100,k=n%10;return m>=11&&m<=14?c:k===1?a:k>=2&&k<=4?b:c};
+
+/* ---------- 1. Остаток после жилья ---------- */
+(function bars(){
+  const data=[
+    {n:'Строитель',s:'Молдова, своё жильё',v:399,c:'var(--hot)'},
+    {n:'Строитель',s:'Италия, комната в Турине',v:1106,c:'var(--cool)'},
+    {n:'Медсестра',s:'Молдова, своё жильё',v:277,c:'var(--hot)'},
+    {n:'Сиделка',s:'Италия, жильё от работодателя',v:1035,c:'var(--cool)'}
+  ];
+  const max=1200;
+  document.getElementById('bars').innerHTML=data.map((d,i)=>`
+    <div class="pbar">
+      <div class="pbar-lab">
+        <div class="pbar-name">${d.n}<s>${d.s}</s></div>
+        <div class="pbar-val" style="color:${d.c==='var(--hot)'?'var(--hot-lit)':'var(--cool-lit)'}">${nf(d.v)} €</div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${d.v/max*100}%;background:${d.c};animation-delay:${i*90}ms"></div></div>
+    </div>`).join('');
+})();
+
+/* ---------- 2. Сроки ---------- */
+(function years(){
+  const W=900,H=330,L=124,R=24,T=34,B=44;
+  const groups=[
+    {n:'Строитель',v:[83,28,17]},
+    {n:'Медсестра',v:[104,35,21]}
+  ];
+  const cols=[{k:'0,66% в год',c:'var(--dim)'},{k:'2,8% в год',c:'var(--hot)'},{k:'5% в год',c:'var(--brass)'}];
+  const max=110, iw=W-L-R, ih=H-T-B, gh=ih/groups.length;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Сколько лет догонять при каждом темпе роста">`;
+  s+='<g class="grid">';
+  for(let x=0;x<=max;x+=20){const px=L+x/max*iw;s+=`<line x1="${px}" y1="${T}" x2="${px}" y2="${T+ih}"/>`}
+  s+='</g><g class="axis">';
+  for(let x=0;x<=max;x+=20){const px=L+x/max*iw;s+=`<text x="${px}" y="${T+ih+22}" text-anchor="middle">${x}</text>`}
+  s+=`<text x="${L+iw}" y="${T-14}" text-anchor="end" class="lbl-2">лет</text></g>`;
+  groups.forEach((g,gi)=>{
+    const gy=T+gi*gh;
+    s+=`<text class="lbl" x="${L-14}" y="${gy+gh/2}" text-anchor="end" dominant-baseline="middle">${g.n}</text>`;
+    g.v.forEach((v,vi)=>{
+      const bh=20, y=gy+gh/2-30+vi*(bh+8), w=v/max*iw;
+      s+=`<rect x="${L}" y="${y}" width="${w}" height="${bh}" rx="2" fill="${cols[vi].c}" opacity="${vi===2?1:vi===1?.92:.55}">
+            <animate attributeName="width" from="0" to="${w}" dur="0.85s" begin="${(gi*3+vi)*70}ms" fill="freeze" calcMode="spline" keySplines=".16 1 .3 1" keyTimes="0;1"/>
+          </rect>`;
+      s+=`<text class="lbl" x="${L+w+9}" y="${y+bh/2+1}" dominant-baseline="middle" font-size="13">${v}</text>`;
+    });
+  });
+  s+='</svg>';
+  s+=`<div class="legend" style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;font-size:.86rem;color:var(--ink-2)">
+      ${cols.map(c=>`<span style="display:flex;align-items:center;gap:.45rem"><i style="width:.7rem;height:.7rem;border-radius:2px;background:${c.c};display:inline-block"></i>${c.k}</span>`).join('')}
+     </div>`;
+  document.getElementById('plot-years').innerHTML=s;
+})();
+
+/* ---------- 3. Линейка жизни ---------- */
+(function life(){
+  const W=900,H=210,L=40,R=40,T=54;
+  const a0=30,a1=80,iw=W-L-R;
+  const px=a=>L+(a-a0)/(a1-a0)*iw;
+  const marks=[
+    {a:47,t:'строитель, 5% в год',c:'var(--brass)',up:1},
+    {a:51,t:'медсестра, 5% в год',c:'var(--brass)',up:0},
+    {a:58,t:'строитель, 2,8% в год',c:'var(--hot)',up:1},
+    {a:65,t:'медсестра, 2,8% в год',c:'var(--hot)',up:0}
+  ];
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Возраст, в котором наступает порог, на линии жизни">`;
+  s+=`<rect x="${px(68.4)}" y="${T-9}" width="${px(a1)-px(68.4)}" height="18" fill="var(--surface-2)"/>`;
+  s+=`<line x1="${px(68.4)}" y1="${T-26}" x2="${px(68.4)}" y2="${T+26}" stroke="var(--ink-3)" stroke-dasharray="3 3"/>`;
+  s+=`<text class="lbl-2" x="${px(68.4)+7}" y="${T-32}">68,4 — мужчины</text>`;
+  s+=`<line x1="${px(77.2)}" y1="${T-26}" x2="${px(77.2)}" y2="${T+26}" stroke="var(--ink-3)" stroke-dasharray="3 3"/>`;
+  s+=`<text class="lbl-2" x="${px(77.2)+7}" y="${T-32}">77,2 — женщины</text>`;
+  s+=`<line x1="${L}" y1="${T}" x2="${W-R}" y2="${T}" stroke="var(--line)" stroke-width="2"/>`;
+  s+='<g class="axis">';
+  for(let a=30;a<=80;a+=5){s+=`<line x1="${px(a)}" y1="${T-5}" x2="${px(a)}" y2="${T+5}" stroke="var(--line)"/><text x="${px(a)}" y="${T+24}" text-anchor="middle">${a}</text>`}
+  s+='</g>';
+  marks.forEach((m,i)=>{
+    const y=m.up?T-52:T+56, ty=m.up?y-8:y+16;
+    s+=`<line x1="${px(m.a)}" y1="${T}" x2="${px(m.a)}" y2="${y+(m.up?12:-12)}" stroke="${m.c}" stroke-width="1.5" opacity=".55"/>`;
+    s+=`<circle cx="${px(m.a)}" cy="${T}" r="6" fill="${m.c}"><animate attributeName="r" from="0" to="6" dur=".5s" begin="${i*110}ms" fill="freeze"/></circle>`;
+    s+=`<text x="${px(m.a)}" y="${y}" text-anchor="middle" fill="${m.c}" font-size="20" font-weight="800">${m.a}</text>`;
+    s+=`<text x="${px(m.a)}" y="${ty}" text-anchor="middle" class="lbl-2" font-size="11.5">${m.t}</text>`;
+  });
+  s+=`<text class="lbl-2" x="${L}" y="${T+44}" font-size="11.5">возраст</text>`;
+  s+='</svg>';
+  document.getElementById('plot-life').innerHTML=s;
+})();
+
+/* ---------- 4. ЕС: 40% → 60% ---------- */
+(function eu(){
+  const d=[{n:'Литва',v:7},{n:'Румыния',v:9},{n:'Латвия',v:10},{n:'Польша',v:17},{n:'Сербия',v:null}];
+  const max=20;
+  document.getElementById('plot-eu').innerHTML=d.map((x,i)=>{
+    const done=x.v!==null;
+    return `<div class="pbar" style="margin-bottom:1.05rem">
+      <div class="pbar-lab">
+        <div class="pbar-name">${x.n}${done?'':'<s>в Евросоюз не вступила</s>'}</div>
+        <div class="pbar-val" style="color:${done?'var(--cool-lit)':'var(--ink-3)'};font-size:${done?'1.15rem':'.95rem'}">${done?x.v+' '+plural(x.v,'год','года','лет'):'до 40% не дошла'}</div>
+      </div>
+      <div class="bar-track">${done?`<div class="bar-fill" style="width:${x.v/max*100}%;background:var(--cool);animation-delay:${i*90}ms"></div>`:`<div style="height:100%;width:100%;background:repeating-linear-gradient(90deg,var(--surface-2) 0 6px,transparent 6px 12px)"></div>`}</div>
+    </div>`;
+  }).join('');
+})();
+
+/* ---------- 5. Механизм ---------- */
+(function mech(){
+  const W=900,H=300,L=190,R=70,T=30,B=36;
+  const rows=[
+    {n:'Реальный ВВП',a:3.03,b:0.23},
+    {n:'Производительность',a:2.84,b:0.66},
+    {n:'Реальная зарплата',a:4.79,b:2.82}
+  ];
+  const max=5, iw=W-L-R, ih=H-T-B, rh=ih/rows.length;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Темпы роста по двум периодам">`;
+  s+='<g class="grid">';
+  for(let x=0;x<=max;x++){const p=L+x/max*iw;s+=`<line x1="${p}" y1="${T}" x2="${p}" y2="${T+ih}"/>`}
+  s+='</g><g class="axis">';
+  for(let x=0;x<=max;x++){const p=L+x/max*iw;s+=`<text x="${p}" y="${T+ih+22}" text-anchor="middle">${x}%</text>`}
+  s+=`<text x="${L+iw}" y="${T-12}" text-anchor="end" class="lbl-2">в год</text></g>`;
+  rows.forEach((r,i)=>{
+    const y=T+i*rh+rh/2;
+    s+=`<text class="lbl" x="${L-14}" y="${y}" text-anchor="end" dominant-baseline="middle">${r.n}</text>`;
+    [[r.a,'var(--cool)',-13,'2014–2018'],[r.b,'var(--hot)',5,'2019–2024']].forEach(([v,c,dy],j)=>{
+      const w=v/max*iw;
+      s+=`<rect x="${L}" y="${y+dy}" width="${w}" height="16" rx="2" fill="${c}" opacity="${j?1:.8}">
+           <animate attributeName="width" from="0" to="${w}" dur=".85s" begin="${(i*2+j)*70}ms" fill="freeze" calcMode="spline" keySplines=".16 1 .3 1" keyTimes="0;1"/></rect>`;
+      s+=`<text class="lbl" x="${L+w+9}" y="${y+dy+9}" dominant-baseline="middle" font-size="12.5">${String(v).replace('.',',')}</text>`;
+    });
+  });
+  s+='</svg>';
+  s+=`<div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-top:1rem;font-size:.86rem;color:var(--ink-2)">
+      <span style="display:flex;align-items:center;gap:.45rem"><i style="width:.7rem;height:.7rem;border-radius:2px;background:var(--cool);display:inline-block"></i>2014–2018</span>
+      <span style="display:flex;align-items:center;gap:.45rem"><i style="width:.7rem;height:.7rem;border-radius:2px;background:var(--hot);display:inline-block"></i>2019–2024</span></div>`;
+  document.getElementById('plot-mech').innerHTML=s;
+})();
+
+/* ---------- 6. Калькулятор ---------- */
+(function calc(){
+  const $=id=>document.getElementById(id);
+  const prof=$('prof'), salHome=$('salHome'), salAway=$('salAway'), rentAway=$('rentAway');
+  let homeRent=115, drift=-0.004;
+
+  function segInit(el,set){
+    el.addEventListener('click',e=>{
+      const b=e.target.closest('button'); if(!b)return;
+      [...el.children].forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+      set(parseFloat(b.dataset.v)); render();
+    });
+  }
+  segInit($('segHome'),v=>homeRent=v);
+  segInit($('segDrift'),v=>drift=v);
+
+  function years(m,r){
+    const eff=(1+r)/(1+drift)-1;
+    if(eff<=0) return null;
+    const y=Math.log(m)/Math.log(1+eff);
+    return (y>0 && y<400)?Math.round(y):null;
+  }
+  function fmt(y){
+    if(y===null) return '<span style="font-size:.62em;font-weight:600;letter-spacing:0">не догоняет</span>';
+    return y+'<s>'+plural(y,'год','года','лет')+'</s>';
+  }
+  function render(){
+    const home=Math.max(1,+salHome.value||0);
+    const rem=Math.max(0,(+salAway.value||0)-(+rentAway.value||0));
+    const needGross=((rem+homeRent)*RATE-TAX_C)/TAX_K;
+    const m=needGross/home;
+    $('outGap').textContent = m<=1 ? 'уже не нужно' : 'в '+m.toFixed(1).replace('.',',')+' раза';
+    const ys={};
+    RATES.forEach(({k,r})=>{ys[k]=m<=1?0:years(m,r)});
+    $('outGood').innerHTML = m<=1?'<span style="font-size:.62em;font-weight:600">порог пройден</span>':fmt(ys.good);
+    $('outNow').innerHTML  = m<=1?'—':fmt(ys.now);
+    $('outBad').innerHTML  = m<=1?'—':fmt(ys.bad);
+    const a=ys.good, b=ys.now;
+    $('outAge').innerHTML = (m>1 && a!==null && b!==null)
+      ? `Если вам сегодня 30, порог наступит в <b>${30+a}</b> ${plural(30+a,'год','года','лет')} при хорошем сценарии и в <b>${30+b}</b> при нынешнем.`
+      : '';
+  }
+  prof.addEventListener('change',()=>{
+    const p=PRESETS[prof.value]; if(!p)return;
+    salHome.value=p.home; salAway.value=p.away; rentAway.value=p.rentAway;
+    drift=p.drift;
+    [...$('segDrift').children].forEach(b=>b.setAttribute('aria-pressed',String(parseFloat(b.dataset.v)===drift)));
+    render();
+  });
+  [salHome,salAway,rentAway].forEach(el=>el.addEventListener('input',()=>{prof.value='custom';render()}));
+  render();
+})();
+</script>
+</body>
+</html>
